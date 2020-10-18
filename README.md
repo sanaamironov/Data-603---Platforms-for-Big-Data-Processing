@@ -16,12 +16,15 @@ The segmentation masks on the training set (2.68M) have been produced by an inte
 Why ResNet50?
 
 ResNet50 is a 50 layer deep, pre-trained Deep learning model for image classification of the Convolutional Neural Network, mostly used to analyze visual imagery. A pre-trained model is a more practical approach than collecting loads of data and training the model ourselves. It is trained on a million images of 1000 categories from the ImageNet database. The model has over 23 million trainable parameters, which indicates a deep architecture that makes it better for image recognition and classification. Also, ResNet50 has excellent generalization performance with fewer error rates than other pre-trained models like AlexNet, GoogleNet, or VGG19. The network has an image input size of 224-by-224.
+![alt text](https://github.com/sanaamironov/Data-603---Platforms-for-Big-Data-Processing/blob/main/cover/resnet50.png)
 Further, in a deep convolutional neural network like VGG16, several layers are stacked and trained to the task, and the network learns several low/mid/high-level features at the end of its layers. Whereas in residual learning, instead of trying to learn some features, we try to learn some residual by subtracting the feature learned from the input of the layer. This is done by directly connecting the input of the nth layer to some (n+x) the layer. Training these kinds of networks is more accessible than training simple deep convolutional neural networks, and the problem of degrading accuracy is also resolved.
 
 MOBILENET
 
 MobileNet is a separable convolution (conv) module which is composed of depth wise and point wise conv. Depth wise conv is performed independently for every input channel of the image, this helps in reducing the computational cost by omitting conversation in channel.
 Mobile net independently performs conv. MobileNet is efficiently used to predict the category we want if available in ImageNet.
+![alt text](https://github.com/sanaamironov/Data-603---Platforms-for-Big-Data-Processing/blob/main/cover/mobilenet.png)
+
 Advantages of using MobileNet:
 • MobileNets is easy to apply as it is light weight.
 
