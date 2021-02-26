@@ -1,12 +1,12 @@
 
             Classification of Big Cats from Google Image Dataset DATA 603 Platforms for Big Data Processing University of Maryland 
 
-The Data Set
+## The Data Set
 The Google Open Images V5 features segmentation masks for 2.8 million object instances in 350 categories. Unlike bounding-boxes, which only identify regions in which an object is located, segmentation masks mark objects' outlines, characterizing their spatial extent to a much higher level of detail. These masks cover a broader range of object categories and a more significant total number of instances than any previous dataset.
 The segmentation masks of the training set (2.68M) have been produced by an interactive segmentation process, where professional human annotators iteratively correct the output of a segmentation neural network. This is considered more efficient than manual drawing alone, while at the same time delivering accurate masks. In addition to the masks, 6.4M new human-verified image-level labels are present, reaching a total of 36.5M over nearly 20,000 categories.
 
 
-Part 1: Preprocessing the data
+## Part 1: Preprocessing the data
 The search for labels within the Google open image dataset was performed using google OID. In order to find a class of images for extraction, we search for the OID labels by examining the OID label hierarchy. Labels are in a hierarchy meaning that a Lion or Cheetah is a sub-label of Big Cats. To view the set of boxable labels( https://storage.googleapis.com/openimages/2017_07/bbox_labels_vis/bbox_labels_vis.html)
 
  Keras Models use ResNet image labels. ResNet has 1000 labels. It is important to note the difference of format between the two. ResNet labels are lower case, while Google OID are not.  
@@ -20,27 +20,27 @@ Next, we download Image ID files into a new dataframe. Then, we separate the dat
 
 To make sure that each image ID within the dataframe is distinct we run another filter on it with ImageID label confidence greater than 99%. The result is a smaller dataframe that went from a size of over 9 million to a little over 3500 labels. 
 
-Parquet File Read
+## Parquet File Read
 The Google Open Image dataset is too large to load into the HDFS ecosystem. To solve this problem, the file was first written to an AVRO file, which was then written to a parquet file. The parquet format contains broken down data to make it easier to read in and to enable management of the large dataset. 
 When reading in the image parquet file, we extract only the columns we are interested in, such as ImageID, Subset the image belongs to, and the raw data of the image itself. We format these columns to match our main dataframe we have built so far. 
 We repeat the process of removing unwanted fields by joining a smaller dataframe, image IDs, with our current large dataframe, image parquet.
 
-Bounding Box
+## Bounding Box
 At this point the data within our dataframes are not human-readable language and we do not have the full picture. We can address this by reading in the bounding boxes of the whole dataset. We join three dataframes into one bounding box dataframe. Again, this will have all the bounding boxes of all the images within the original dataset. When reading in the three CSV files, a schema was not created, so the data read in is not the format we want. This will be corrected later on. Repeating the process of removing unwanted fields by joining a smaller dataframe, image IDs, with our current large dataframe, bounding box. This process removes any image ID that is not within the dataframe image ID. The bounding box dataframe now has only the images we are interested in.
 Still we are unable to read the data from the bounding box. To fix this problem, we join the bounding box dataframe with the label dataframe. This is joining the label code to the label name to make the information within the dataframe human-readable.
 
-Extract image chips:
+## Extract image chips:
 All the CSV files have been read, formatted to meet our criteria, and organized into a dataframe. Now we want to be able to extract an image chip, not just an image itself. The image chip will have information such as the label name, ID, bounding box size, and the confidence interval within each image. 
 To expand our bounding box dataframe to have all the information it needs, we join in the images parquet dataframe. This adds the raw ImageID of an image from the parquet data to the bounding box dataframe. To be able to extract each image chip, we define a UDF to extract the portion of the image defined within the bounding box.  
 UDF extract image chip uses the PIL library to read in one image at a time. When reading in the image it also extracts the image size. Then it starts converting the bounding box x and y directions to a float number. It calculates the size of the picture based on the bounding boxes. The bounding box coordinates are given as fractions of the number of pixels in the image. It takes the image and crops it to the size of the bounding box it just calculated. The image is saved to a byte-buffer by getting the raw bytes of the image before returning it and repeating the same process on the next image. 
 
-Parquet File Write
+## Parquet File Write
 Now that all the data from the original Google Open Image dataset has been extracted and cleaned up to our desired format, we can write the dataframe to a parquet file. This is done by defining another UDF that writes each image chip file to the HDFS and evaluates it on the dataframe. 
 The UDF writes the image chips from every spark node in parallel across the cluster. This also avoids pulling every image chip back to the notebook later when needed. 
 Outside of the UDF function we write the file by using the desired dataframe to write.praquet file to the path. It is very important to consider that this action might result in running out of memory on the cluster. To address this potential problem, we increase capacity and, if necessary, use write.mode(‘overwrite’).praquet to write over whatever was not saved.
 
 
-Basic Exploratory Analysis 
+## Basic Exploratory Analysis 
 The dataset is not consistent. There are issues associated with different sizes, orientations, and occlusions possible in our target classes. In a few cases, we were not successful in downloading the actual image we wanted.
 Label distribution
 The following figures show the distribution of annotations across the dataset. The class distribution is heavily skewed. The number of positive examples in orders of labels, then by the number of negative examples. The different colors like green indicate positive examples, while red indicates negatives.
@@ -50,13 +50,13 @@ The following figures show the distribution of annotations across the dataset. T
 
 ![alt text](https://github.com/sanaamironov/Data-603-Platforms-for-Big-Data-Processing/blob/main/cover/v5-human-label-frequencies-train.png)
 
-Model Evaluation
-Why ResNet50?
+## Model Evaluation
+## Why ResNet50?
 ResNet50 is a 50-layer deep, pre-trained Deep Learning model for image classification of the Convolutional Neural Network, mostly used to analyze visual imagery. A pre-trained model is a more practical approach than collecting sufficient amount of data and training the model from the start. It is trained on a million images of 1000 categories from the ImageNet database. The model has over 23 million trainable parameters, which indicates a deep architecture that makes it better for image recognition and classification. Also, ResNet50 has excellent generalization performance with smaller error rates as compared to other pre-trained models like AlexNet, GoogleNet, or VGG19. The network has an image input size of 224-by-224.
 Further, in a deep convolutional neural network like VGG16, several layers are stacked and trained to the task, and the network learns several low/mid/high-level features at the end of its layers. Whereas in residual learning, instead of learning some features, we try to learn some residual by subtracting the feature learned from the input of the layer. This is done by directly connecting the nth layer's input to some (n+x) layer. Training these kinds of networks is more accessible than training simple deep convolutional neural networks, and the problem of degrading accuracy is also resolved. 
 ![alt text](https://github.com/sanaamironov/Data-603---Platforms-for-Big-Data-Processing/blob/main/cover/resnet50.png)
 
-Why MOBILENET?
+## Why MOBILENET?
 MobileNet is a separable convolution (Conv) model that is composed of depth-wise and pointwise Conv. Depth-wise Conv is performed independently for every input channel of the image; this reduces the computational cost by omitting conversation in the channel. 
 ![alt text](https://github.com/sanaamironov/Data-603---Platforms-for-Big-Data-Processing/blob/main/cover/mobilenet.png)
 
@@ -74,7 +74,7 @@ Disadvantages:
 Add image here
 
 
-Running a Model
+## Running a Model
 
 In a separate notebook we run a Keras model in parallel with Spark on all the image chips that were extracted. Since this is a new notebook, Spark must be configured and launched with the model file uploaded. 
 The process is the same for both models when it comes to reading the data. 
@@ -83,7 +83,7 @@ We start out by reading in the data. This is the data from the parquet file that
 ![alt text](https://github.com/sanaamironov/Data-603-Platforms-for-Big-Data-Processing/blob/main/cover/Image_chip.png)
 
 
-Pandas UDF For the Models
+## Pandas UDF For the Models
 I create the Pandas UDF using the `pandas_udf` decorator. The schema of the dataframe is passed into the UDF decorator. 
 The input to the function (called `pdf` here) is a Pandas dataframe. This is simply a Pandas dataframe that is pointing to a __portion__ of the Spark dataframe. It is created __without copying__ any data from the Spark memory to the Python process memory so it's fast.
 
@@ -96,7 +96,7 @@ MobileNets trade off between latency, size and accuracy while comparing favorabl
 
 ![alt text](https://github.com/sanaamironov/Data-603-Platforms-for-Big-Data-Processing/blob/main/cover/ModelPredicatio%20%20.png)
 
-ResNet Model Prediction:
+## ResNet Model Prediction:
 
 We were unsuccessful in compiling the model on our dataset. However, reading in the data and running it thought an image chip evaluate is the same. Instead of running the images on MobileNet prediction model the images would have been compiled with ResNet50 predication model. 
 
